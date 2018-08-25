@@ -1,5 +1,5 @@
 ### Compile:
-g++ main.cpp window.cpp glapplication.cpp -o test -lglut -lGL -lGLU -lGLEW -lglfw -I/home/lucas/Documents/git/VisoProj-TBP/OpenGL/include -std=c++11
+g++ main.cpp window.cpp glapplication.cpp -o test -lglut -lGL -lGLU -lGLEW -lglfw -std=c++11
 
 
 ### Dependencies:
@@ -13,6 +13,6 @@ g++ main.cpp window.cpp glapplication.cpp -o test -lglut -lGL -lGLU -lGLEW -lglf
 ### HowToUse
 * Initialize:                       GLApplication app;
 * Call render with picture arary:   std::vector<float> render = app.render(pictures);
-* Cleanup GPU memory:               app.cleanup();
+* Cleanup SSBO GPU memory:               app.cleanup();
 Cleanup is  necessary for I do not delete the context. I plainly pause it untill the context
 qued task.

@@ -28,7 +28,7 @@ class GLApplication{
     GLApplication();
     ~GLApplication();
     std::vector<float> render(std::vector<std::vector<float>*> pictures);
-    void cleanup();
+    void cleanupSSBOs();
 
 
   protected:

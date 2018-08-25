@@ -333,23 +333,23 @@ GLuint GLApplication::createProgram(std::string const& comp) {
   return id;
 }
 
-void GLApplication::cleanup(){
+void GLApplication::cleanupSSBOs(){
 
-  // GLfloat* ptr;
-  // std::vector<float> dump;
-  // dump.reserve(NUM_PIX * sizeof(float));
-  //
-  // glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_result.handle);
-  // ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-  // memcpy(ptr, dump.data(), NUM_PIX * sizeof(float));
-  // glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-  //
-  // for(unsigned int i = 0; i < ssbo_container.size(); i++){
-  //   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
-  //   ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-  //   memcpy(ptr, dump.data(), NUM_PIX * sizeof(float));
-  //   glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-  // }
+  GLfloat* ptr;
+  std::vector<float> dump;
+  dump.reserve(NUM_PIX * sizeof(float));
+
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_result.handle);
+  ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+  memcpy(ptr, dump.data(), NUM_PIX * sizeof(float));
+  glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+  for(unsigned int i = 0; i < ssbo_container.size(); i++){
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
+    ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+    memcpy(ptr, dump.data(), NUM_PIX * sizeof(float));
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+  }
 }
 
 GLApplication::~GLApplication(){
