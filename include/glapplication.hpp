@@ -43,7 +43,7 @@ class GLApplication{
     void update_StorageBuffer(Pstruct pstruct);
     void update_StorageBuffer(std::vector<float> input_buffer);
     void update_Texture(std::vector<float> input_buffer);
-    void update_PixelBuffer();
+    void update_PixelBuffer(std::vector<float> input_buffer);
 
     void initialCheck();
     void initializePrograms();
@@ -65,9 +65,10 @@ class GLApplication{
     std::vector<float> result_container;
     std::vector<SSBO> ssbo_container;
     std::vector<Tex_obj> tex_container;
+    std::vector<const char*> uniform_names;
     SSBO ssbo_result;
-    PBO u_pbo;
-    PBO p_pbo;
+    PBO pbo;
+    PBO pbo2;
     FBO fbo;
     Tex_obj color_rb;
     Tex_obj color_tb;

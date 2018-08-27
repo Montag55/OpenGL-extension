@@ -1,6 +1,6 @@
 #include "./../include/glapplication.hpp"
 
-GLApplication::GLApplication(){
+GLApplication::GLApplication() {
   g_background_color = glm::vec3(0.08f, 0.08f, 0.08f);
   g_window_res = glm::ivec2(800, 600);
   g_reload_shader_error = false;
@@ -9,40 +9,31 @@ GLApplication::GLApplication(){
   g_weighted_sum_program = 0;
   g_tex_program = 0;
   NUM_PIX = 1920*1080*4;
-  WORK_GROUP_SIZE = 1000;
-  m_res = glm::ivec2(1920*1080);
+  WORK_GROUP_SIZE = 10;
+  m_res = glm::ivec2(1920, 1080);
 
-  //initialCheck();
+  initialCheck();
   initializePrograms();
   initializeTextures();
+  initPixelBuffer();
 }
 
-std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictures){
+std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictures) {
 
   std::vector<float> test;
-  std::vector<float> test2;
   unsigned int counter = 0;
   for(int i = 0; i < NUM_PIX; i++){
-    test.push_back(7.7f);
-    test2.push_back(1.5f);
+    test.push_back(8.8f);
   }
 
   while (!g_win.shouldClose()) {
-
-    if(counter%2 == 0)
-      update_Texture(test);
-    else
-      update_Texture(test2);
-
+    glUseProgram(g_tex_program);
+    update_PixelBuffer(test);
+    update_Texture(test);
     do_Computation(g_tex_program);
     read_Texture();
 
     g_win.update();
-
-    for(int i = 0; i < 4; i++){
-      std::cout << result_container[i] << ", ";
-    }
-    std::cout << "" << std::endl;
 
     if(counter >= pictures.size()){
       return result_container;
@@ -52,7 +43,7 @@ std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictur
   }
 }
 
-void GLApplication::initializePrograms(){
+void GLApplication::initializePrograms() {
   const std::string g_file_sum_shader("./../shader/sum.comp");
   const std::string g_file_weighted_sum_shader("./../shader/weighted_sum.comp");
   const std::string g_file_tex_shader("./../shader/tex.comp");
@@ -86,12 +77,16 @@ void GLApplication::initializeStorageBuffers() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i+1, ssbo.handle);
     glBufferData(GL_SHADER_STORAGE_BUFFER, (NUM_PIX + 1) * sizeof(float), NULL, GL_DYNAMIC_DRAW);
     ssbo_container.push_back(ssbo);
+
+    GLenum err;
+    if((err = glGetError()) != GL_NO_ERROR){
+      std::cout << "OpenGL error initSBO: " << err << std::endl;
+    }
   }
 
 }
 
-void GLApplication::initializeTextures(){
-  std::vector<const char*> uniform_names;
+void GLApplication::initializeTextures() {
   uniform_names.push_back("destTex");
   uniform_names.push_back("srcTex");
 
@@ -99,30 +94,36 @@ void GLApplication::initializeTextures(){
     Tex_obj tex;
     glActiveTexture(GL_TEXTURE0+i);
     glGenTextures(1, &tex.handle);
-    glBindTexture(GL_TEXTURE_1D, tex.handle);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, m_res.x * m_res.y, 0, GL_RGB, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D, tex.handle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_res.x, m_res.y, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindImageTexture(i, tex.handle, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-    glUniform1i(glGetUniformLocation(g_tex_program, uniform_names[i]), i);
     tex_container.push_back(tex);
+
+    GLenum err;
+    if((err = glGetError()) != GL_NO_ERROR){
+      std::cout << "OpenGL error initTex2: " << err << std::endl;
+    }
   }
 }
 
-void GLApplication::initPixelBuffer(){
-  glGenBuffers(1, &u_pbo.handle);
-  glBindBuffer(GL_PIXEL_UNPACK_BUFFER, u_pbo.handle);
+void GLApplication::initPixelBuffer() {
+  glGenBuffers(1, &pbo.handle);
+  glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo.handle);
   glBufferData(GL_PIXEL_UNPACK_BUFFER, NUM_PIX * sizeof(float), 0, GL_DYNAMIC_DRAW);
-  glReadPixels(0, 0, 1920, 1080, GL_RGB, GL_FLOAT, 0);
 
-
-  glGenBuffers(1, &p_pbo.handle);
-  glBindBuffer(GL_PIXEL_PACK_BUFFER, p_pbo.handle);
+  glGenBuffers(1, &pbo2.handle);
+  glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo2.handle);
   glBufferData(GL_PIXEL_PACK_BUFFER, NUM_PIX * sizeof(float), 0, GL_DYNAMIC_DRAW);
-  glReadPixels(0, 0, 1920, 1080, GL_RGB, GL_FLOAT, 0);
+
+  GLenum err;
+  if((err = glGetError()) != GL_NO_ERROR){
+    std::cout << "OpenGL error initPBO: " << err << std::endl;
+  }
 }
 
-void GLApplication::initializeFramBuffer(){
+void GLApplication::initializeFramBuffer() {
 
   glActiveTexture(GL_TEXTURE0);
   glGenTextures(1, &color_tb.handle);
@@ -198,16 +199,32 @@ void GLApplication::initialCheck() {
   int uniform_max_blocks;
   glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &uniform_max_blocks);
   std::cout << "max uniform block size: " << uniform_max_blocks << std::endl;
+  std::cout << "--------------------------------------------------------------\n" << std::endl;
 }
 
-void GLApplication::read_Texture(){
+void GLApplication::read_Texture() {
   glActiveTexture(GL_TEXTURE0);
-  float *tmp = new float[1920*1080*4];
-  glBindTexture(GL_TEXTURE_1D, tex_container[0].handle);
-  glGetTexImage(GL_TEXTURE_1D, 0, GL_RGBA, GL_FLOAT, tmp);
+  glBindTexture(GL_TEXTURE_2D, tex_container[0].handle);
+  glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo2.handle);
+  glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0);
 
-  result_container.reserve(NUM_PIX);
-  memcpy(result_container.data(), tmp, NUM_PIX * sizeof(float));
+  std::vector<float> tmp;
+  tmp.reserve(NUM_PIX);
+  GLfloat *ptr = (GLfloat *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_WRITE);
+  memcpy(tmp.data(), ptr, NUM_PIX * sizeof(float));
+  glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+  glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+
+  for(int i = 0; i < 4; i++){
+    std::cout << tmp[i] << ", ";
+  }
+  std::cout << " " << std::endl;
+
+  GLenum err;
+  if((err = glGetError()) != GL_NO_ERROR){
+    std::cout << "OpenGL error readTex: " << err << std::endl;
+  }
 }
 
 void GLApplication::read_Computation() {
@@ -221,12 +238,17 @@ void GLApplication::read_Computation() {
 
 void GLApplication::do_Computation(GLuint program) {
   glUseProgram(program);
-  glDispatchCompute(NUM_PIX / WORK_GROUP_SIZE, 1, 1);
-  //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  glDispatchCompute(1920*4/ WORK_GROUP_SIZE, 1080/WORK_GROUP_SIZE, 1);
   glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
+  //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+  GLenum err;
+  if((err = glGetError()) != GL_NO_ERROR){
+    std::cout << "OpenGL error doComp: " << err << std::endl;
+  }
 }
 
-void GLApplication::update_StorageBuffer(Pstruct pstruct){
+void GLApplication::update_StorageBuffer(Pstruct pstruct) {
   for(unsigned int i = 0; i < ssbo_container.size(); i++){
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
     Pstruct* ptr = (Pstruct *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
@@ -235,7 +257,7 @@ void GLApplication::update_StorageBuffer(Pstruct pstruct){
   }
 }
 
-void GLApplication::update_StorageBuffer(std::vector<float> input_buffer){
+void GLApplication::update_StorageBuffer(std::vector<float> input_buffer) {
   for(unsigned int i = 0; i < ssbo_container.size(); i++){
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
     GLfloat* ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
@@ -244,28 +266,32 @@ void GLApplication::update_StorageBuffer(std::vector<float> input_buffer){
   }
 }
 
-void GLApplication::update_Texture(std::vector<float> input_buffer){
+void GLApplication::update_Texture(std::vector<float> input_buffer) {
   for(unsigned int i = 0; i < tex_container.size(); i++){
     glActiveTexture(GL_TEXTURE0+i);
-    glBindTexture(GL_TEXTURE_1D, tex_container[i].handle);
-    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, m_res.x * m_res.y, GL_RGBA, GL_FLOAT, input_buffer.data());
+    glBindTexture(GL_TEXTURE_2D, tex_container[i].handle);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo.handle);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_res.x, m_res.y, GL_RGBA, GL_FLOAT, 0);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+    GLenum err;
+    if((err = glGetError()) != GL_NO_ERROR){
+      std::cout << "OpenGL error updateTex: " << err << std::endl;
+    }
   }
 }
 
-void GLApplication::update_PixelBuffer(){
-  float *tmp = new float[1920*1080*4];
-
-  glBindBuffer(GL_PIXEL_PACK_BUFFER, p_pbo.handle);
-  GLfloat *ptr = (GLfloat *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-  memcpy(tmp, ptr, NUM_PIX * sizeof(float));
-  glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-  glReadPixels(0, 0, 1920, 1080, GL_RGB, GL_FLOAT, 0);
-
-  glBindBuffer(GL_PIXEL_UNPACK_BUFFER, u_pbo.handle);
-  ptr = (GLfloat *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_WRITE_ONLY);
-  memcpy(ptr, tmp, NUM_PIX * sizeof(float));
+void GLApplication::update_PixelBuffer(std::vector<float> input_buffer) {
+  glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo.handle);
+  glBufferData(GL_PIXEL_UNPACK_BUFFER, NUM_PIX * sizeof(float), 0, GL_STREAM_DRAW);
+  GLfloat *ptr = (GLfloat *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+  memcpy(ptr, input_buffer.data(), NUM_PIX * sizeof(float));
   glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-  glReadPixels(0, 0, 1920, 1080, GL_RGB, GL_FLOAT, 0);
+
+  GLenum err;
+  if((err = glGetError()) != GL_NO_ERROR){
+    std::cout << "OpenGL error updatePBO: " << err << std::endl;
+  }
 }
 
 std::string GLApplication::readFile(std::string const& file) {
@@ -333,7 +359,7 @@ GLuint GLApplication::createProgram(std::string const& comp) {
   return id;
 }
 
-void GLApplication::cleanupSSBOs(){
+void GLApplication::cleanupSSBOs() {
 
   GLfloat* ptr;
   std::vector<float> dump;
@@ -352,10 +378,13 @@ void GLApplication::cleanupSSBOs(){
   }
 }
 
-GLApplication::~GLApplication(){
+GLApplication::~GLApplication() {
   glDeleteBuffers(1, &ssbo_result.handle);
-  glDeleteBuffers(1, &u_pbo.handle);
-  glDeleteBuffers(1, &p_pbo.handle);
+  glDeleteBuffers(1, &pbo.handle);
+  glDeleteBuffers(1, &pbo2.handle);
+  glDeleteBuffers(1, &fbo.handle);
+  glDeleteBuffers(1, &color_rb.handle);
+  glDeleteBuffers(1, &color_tb.handle);
   for(unsigned int i = 0; i < ssbo_container.size(); i++){
     glDeleteBuffers(1, &ssbo_container[i].handle);
   }
