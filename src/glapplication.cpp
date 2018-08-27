@@ -8,9 +8,9 @@ GLApplication::GLApplication() {
   g_sum_program = 0;
   g_weighted_sum_program = 0;
   g_tex_program = 0;
-  NUM_PIX = 1920*1080*4;
+  NUM_PIX = 1920*1080*3;
   WORK_GROUP_SIZE = 10;
-  m_res = glm::ivec2(1920, 1080);
+  m_res = glm::ivec2(1920*3, 1080);
 
   initialCheck();
   initializePrograms();
@@ -97,8 +97,8 @@ void GLApplication::initializeTextures() {
     glBindTexture(GL_TEXTURE_2D, tex.handle);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_res.x, m_res.y, 0, GL_RGBA, GL_FLOAT, NULL);
-    glBindImageTexture(i, tex.handle, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_res.x, m_res.y, 0, GL_RED, GL_FLOAT, NULL);
+    glBindImageTexture(i, tex.handle, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
     tex_container.push_back(tex);
 
     GLenum err;
@@ -206,7 +206,7 @@ void GLApplication::read_Texture() {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, tex_container[0].handle);
   glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo2.handle);
-  glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0);
+  glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, 0);
 
   std::vector<float> tmp;
   tmp.reserve(NUM_PIX);
@@ -238,7 +238,7 @@ void GLApplication::read_Computation() {
 
 void GLApplication::do_Computation(GLuint program) {
   glUseProgram(program);
-  glDispatchCompute(1920*4/ WORK_GROUP_SIZE, 1080/WORK_GROUP_SIZE, 1);
+  glDispatchCompute(1920*3/ WORK_GROUP_SIZE, 1080/WORK_GROUP_SIZE, 1);
   glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
   //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -271,7 +271,7 @@ void GLApplication::update_Texture(std::vector<float> input_buffer) {
     glActiveTexture(GL_TEXTURE0+i);
     glBindTexture(GL_TEXTURE_2D, tex_container[i].handle);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo.handle);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_res.x, m_res.y, GL_RGBA, GL_FLOAT, 0);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_res.x, m_res.y, GL_RED, GL_FLOAT, 0);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
     GLenum err;
