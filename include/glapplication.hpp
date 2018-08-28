@@ -61,7 +61,7 @@ class GLApplication{
     GLuint g_sum_program;
     GLuint g_weighted_sum_program;
     GLuint g_tex_program;
-    LGsizei m_layerCount;
+    GLsizei m_layerCount;
 
     std::vector<float> result_container;
     std::vector<SSBO> ssbo_container;

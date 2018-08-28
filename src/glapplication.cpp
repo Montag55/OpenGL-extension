@@ -29,7 +29,7 @@ std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictur
 
   while (!g_win.shouldClose()) {
 
-    for(unsigned int i = 0, i < m_layerCount; i++){
+    for(unsigned int i = 0; i < m_layerCount; i++){
       update_PixelBuffer(pbo_container[i], test);
     }
 
@@ -183,9 +183,9 @@ void GLApplication::initialCheck() {
             << work_grp_cnt[2] << std::endl;
 
   int work_grp_size[3];
-  glGetIntegeri_v(GL_MAX_COMPUTE_m_WORK_GROUP_SIZE, 0, &work_grp_size[0]);
-  glGetIntegeri_v(GL_MAX_COMPUTE_m_WORK_GROUP_SIZE, 1, &work_grp_size[1]);
-  glGetIntegeri_v(GL_MAX_COMPUTE_m_WORK_GROUP_SIZE, 2, &work_grp_size[2]);
+  glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &work_grp_size[0]);
+  glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &work_grp_size[1]);
+  glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &work_grp_size[2]);
   std::cout << "max local (in one shader) work group sizes x: "
             << work_grp_size[0] << " y: "
             << work_grp_size[1] << " z: "
