@@ -14,17 +14,22 @@ GLApplication::GLApplication() {
   m_res = glm::ivec2(1920*3, 1080);
 
   initialCheck();
+  initPixelBuffer();
   initializePrograms();
   initializeTextures();
-  initPixelBuffer();
+  initializeStorageBuffers();
 }
 
 std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictures) {
 
   std::vector<float> test;
+  std::vector<float> weights;
   unsigned int counter = 0;
   for(int i = 0; i < m_NUM_PIX; i++){
     test.push_back(1.0f);
+  }
+  for(int i = 0; i < m_layerCount; i++){
+    weights.push_back(3.0f);
   }
 
   while (!g_win.shouldClose()) {
@@ -34,6 +39,7 @@ std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictur
     }
 
     update_Texture(test);
+    update_StorageBuffer(weights);
     do_Computation(g_tex_program);
     read_Texture();
 
@@ -66,28 +72,14 @@ void GLApplication::initializePrograms() {
 }
 
 void GLApplication::initializeStorageBuffers() {
+  glGenBuffers(1, &ssbo_weights.handle);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo_weights.handle);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, m_layerCount * sizeof(float), NULL, GL_DYNAMIC_DRAW);
 
-  for(int i = 0; i < m_NUM_PIX; i++){
-    result_container.push_back(0.0f);
+  GLenum err;
+  if((err = glGetError()) != GL_NO_ERROR){
+    std::cout << "OpenGL error initSBO: " << err << std::endl;
   }
-
-  glGenBuffers(1, &ssbo_result.handle);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_result.handle);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, m_NUM_PIX * sizeof(float), result_container.data(), GL_DYNAMIC_DRAW);
-
-  for(unsigned int i = 0; i < 1; i++){
-    SSBO ssbo;
-    glGenBuffers(1, &ssbo.handle);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i+1, ssbo.handle);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, (m_NUM_PIX + 1) * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-    ssbo_container.push_back(ssbo);
-
-    GLenum err;
-    if((err = glGetError()) != GL_NO_ERROR){
-      std::cout << "OpenGL error initSBO: " << err << std::endl;
-    }
-  }
-
 }
 
 void GLApplication::initializeTextures() {
@@ -145,32 +137,6 @@ void GLApplication::initPixelBuffer() {
   GLenum err;
   if((err = glGetError()) != GL_NO_ERROR){
     std::cout << "OpenGL error initPBO: " << err << std::endl;
-  }
-}
-
-void GLApplication::initializeFramBuffer() {
-
-  glActiveTexture(GL_TEXTURE0);
-  glGenTextures(1, &color_tb.handle);
-  glBindTexture(GL_TEXTURE_2D, color_tb.handle);
-  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA32F, 1920, 1080, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_tb.handle, 0);
-
-  glGenRenderbuffers(1, &color_rb.handle);
-  glBindRenderbuffer(GL_RENDERBUFFER, color_rb.handle);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1920, 1080);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, color_rb.handle);
-
-  glGenFramebuffers(1, &fbo.handle);
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo.handle);
-  GLenum draw_buffers[1] = {GL_COLOR_ATTACHMENT0};
-  glDrawBuffers(1, draw_buffers);
-
-  GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
-  if (status != GL_FRAMEBUFFER_COMPLETE){
-    std::cout << "ERROR Framebuffer not complete" << '\n';
   }
 }
 
@@ -260,15 +226,6 @@ void GLApplication::read_Texture() {
   }
 }
 
-void GLApplication::read_Computation() {
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_result.handle);
-  GLfloat *ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-  memcpy(result_container.data(), ptr, m_NUM_PIX * sizeof(float));
-  glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-  std::cout << "container: " << result_container[0] << std::endl;
-}
-
 void GLApplication::do_Computation(GLuint program) {
   glUseProgram(program);
   glDispatchCompute(1920*3/ m_WORK_GROUP_SIZE, 1080/m_WORK_GROUP_SIZE, 1);
@@ -281,22 +238,11 @@ void GLApplication::do_Computation(GLuint program) {
   }
 }
 
-void GLApplication::update_StorageBuffer(Pstruct pstruct) {
-  for(unsigned int i = 0; i < ssbo_container.size(); i++){
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
-    Pstruct* ptr = (Pstruct *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    //memcpy(ptr, &pstruct, m_NUM_PIX * sizeof(float));
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-  }
-}
-
 void GLApplication::update_StorageBuffer(std::vector<float> input_buffer) {
-  for(unsigned int i = 0; i < ssbo_container.size(); i++){
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_weights.handle);
     GLfloat* ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    memcpy(ptr, input_buffer.data(), m_NUM_PIX * sizeof(float));
+    memcpy(ptr, input_buffer.data(), m_layerCount * sizeof(float));
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-  }
 }
 
 void GLApplication::update_Texture(std::vector<float> input_buffer) {
@@ -400,35 +346,21 @@ void GLApplication::cleanupSSBOs() {
 
   GLfloat* ptr;
   std::vector<float> dump;
-  dump.reserve(m_NUM_PIX * sizeof(float));
+  dump.reserve(m_layerCount * sizeof(float));
 
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_result.handle);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_weights.handle);
   ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-  memcpy(ptr, dump.data(), m_NUM_PIX * sizeof(float));
+  memcpy(ptr, dump.data(), m_layerCount * sizeof(float));
   glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-  for(unsigned int i = 0; i < ssbo_container.size(); i++){
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_container[i].handle);
-    ptr = (GLfloat *) glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    memcpy(ptr, dump.data(), m_NUM_PIX * sizeof(float));
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-  }
 }
 
 GLApplication::~GLApplication() {
-  glDeleteBuffers(1, &ssbo_result.handle);
+  glDeleteBuffers(1, &ssbo_weights.handle);
   glDeleteBuffers(1, &p_pbo.handle);
-  glDeleteBuffers(1, &fbo.handle);
-  glDeleteBuffers(1, &color_rb.handle);
-  glDeleteBuffers(1, &color_tb.handle);
-  for(unsigned int i = 0; i < ssbo_container.size(); i++){
-    glDeleteBuffers(1, &ssbo_container[i].handle);
-  }
   for(unsigned int i = 0; i < tex_container.size(); i++){
     glDeleteBuffers(1, &tex_container[i].handle);
   }
   for(unsigned int i = 0; i < pbo_container.size(); i++){
     glDeleteBuffers(1, &pbo_container[i].handle);
   }
-
 };

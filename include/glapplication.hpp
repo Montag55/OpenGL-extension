@@ -64,15 +64,12 @@ class GLApplication{
     GLsizei m_layerCount;
 
     std::vector<float> result_container;
-    std::vector<SSBO> ssbo_container;
     std::vector<Tex_obj> tex_container;
     std::vector<const char*> uniform_names;
     std::vector<PBO> pbo_container;
     PBO p_pbo;
-    SSBO ssbo_result;
-    FBO fbo;
-    Tex_obj color_rb;
-    Tex_obj color_tb;
+    SSBO ssbo_weights;
+
 
     float m_NUM_PIX;
     unsigned int m_WORK_GROUP_SIZE;
