@@ -43,7 +43,7 @@ class GLApplication{
     void update_StorageBuffer(Pstruct pstruct);
     void update_StorageBuffer(std::vector<float> input_buffer);
     void update_Texture(std::vector<float> input_buffer);
-    void update_PixelBuffer(std::vector<float> input_buffer);
+    void update_PixelBuffer(PBO pbo, std::vector<float> input_buffer);
 
     void initialCheck();
     void initializePrograms();
@@ -61,20 +61,21 @@ class GLApplication{
     GLuint g_sum_program;
     GLuint g_weighted_sum_program;
     GLuint g_tex_program;
+    LGsizei m_layerCount;
 
     std::vector<float> result_container;
     std::vector<SSBO> ssbo_container;
     std::vector<Tex_obj> tex_container;
     std::vector<const char*> uniform_names;
+    std::vector<PBO> pbo_container;
+    PBO p_pbo;
     SSBO ssbo_result;
-    PBO pbo;
-    PBO pbo2;
     FBO fbo;
     Tex_obj color_rb;
     Tex_obj color_tb;
 
-    float NUM_PIX;
-    unsigned int WORK_GROUP_SIZE;
+    float m_NUM_PIX;
+    unsigned int m_WORK_GROUP_SIZE;
     glm::ivec2 m_res;
 };
 
