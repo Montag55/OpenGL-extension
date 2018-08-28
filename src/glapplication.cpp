@@ -20,16 +20,16 @@ GLApplication::GLApplication() {
   initializeStorageBuffers();
 }
 
-std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictures) {
+std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictures, std::vector<float> weights) {
 
   std::vector<float> test;
-  std::vector<float> weights;
+  std::vector<float> t_weights;
   unsigned int counter = 0;
   for(int i = 0; i < m_NUM_PIX; i++){
     test.push_back(1.0f);
   }
   for(int i = 0; i < m_layerCount; i++){
-    weights.push_back(3.0f);
+    t_weights.push_back(3.0f);
   }
 
   while (!g_win.shouldClose()) {
@@ -39,7 +39,7 @@ std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictur
     }
 
     update_Texture(test);
-    update_StorageBuffer(weights);
+    update_StorageBuffer(t_weights);
     do_Computation(g_tex_program);
     read_Texture();
 

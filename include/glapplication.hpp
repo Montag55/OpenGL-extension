@@ -27,7 +27,7 @@ class GLApplication{
   public:
     GLApplication();
     ~GLApplication();
-    std::vector<float> render(std::vector<std::vector<float>*> pictures);
+    std::vector<float> render(std::vector<std::vector<float>*> pictures, std::vector<float> weights);
     void cleanupSSBOs();
 
 
