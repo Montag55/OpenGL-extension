@@ -8,7 +8,7 @@ GLApplication::GLApplication() {
   g_sum_program = 0;
   g_weighted_sum_program = 0;
   g_tex_program = 0;
-  m_layerCount = 256;
+  m_layerCount = 10;
   m_NUM_PIX = 1920*1080*3;
   m_WORK_GROUP_SIZE = 10;
   m_res = glm::ivec2(1920*3, 1080);
@@ -24,7 +24,7 @@ std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictur
   std::vector<float> test;
   unsigned int counter = 0;
   for(int i = 0; i < m_NUM_PIX; i++){
-    test.push_back(8.8f);
+    test.push_back(1.0f);
   }
 
   while (!g_win.shouldClose()) {
@@ -102,6 +102,8 @@ void GLApplication::initializeTextures() {
     if(i == 0) {
       glGenTextures(1, &tex.handle);
       glBindTexture(GL_TEXTURE_2D, tex.handle);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_res.x, m_res.y, 0, GL_RED, GL_FLOAT, NULL);
@@ -109,9 +111,12 @@ void GLApplication::initializeTextures() {
     else {
       glGenTextures(1, &tex.handle);
       glBindTexture(GL_TEXTURE_2D_ARRAY, tex.handle);
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
       glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-      glTexStorage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, m_res.x, m_res.y, m_layerCount);
+      // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, m_res.x, m_res.y, m_layerCount, 0, GL_RED, GL_FLOAT, NULL);
+      glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, m_res.x, m_res.y, m_layerCount);
     }
 
     glBindImageTexture(i, tex.handle, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
@@ -119,7 +124,7 @@ void GLApplication::initializeTextures() {
 
     GLenum err;
     if((err = glGetError()) != GL_NO_ERROR){
-      std::cout << "OpenGL error initTex2: " << err << std::endl;
+      std::cout << "OpenGL error initTex: " << err << std::endl;
     }
   }
 }
@@ -300,7 +305,7 @@ void GLApplication::update_Texture(std::vector<float> input_buffer) {
     glBindTexture(GL_TEXTURE_2D_ARRAY, tex_container[i].handle);
 
     // pbo_container.size() = m_layerCount
-    for(unsigned int j = 0; j < pbo_container.size(); j++){
+    for(unsigned int j = 0; j < m_layerCount; j++){
       glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo_container[j].handle);
       glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, j, m_res.x, m_res.y, 1, GL_RED, GL_FLOAT, 0);
       glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
