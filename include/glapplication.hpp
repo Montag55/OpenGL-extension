@@ -42,7 +42,7 @@ class GLApplication{
     void do_Computation(GLuint program);
     void update_StorageBuffer(Pstruct pstruct);
     void update_StorageBuffer(std::vector<float> input_buffer);
-    void update_Texture(std::vector<float> input_buffer);
+    void update_Texture();
     void update_PixelBuffer(PBO pbo, std::vector<float> input_buffer);
 
     void initialCheck();
@@ -67,12 +67,15 @@ class GLApplication{
     std::vector<Tex_obj> tex_container;
     std::vector<const char*> uniform_names;
     std::vector<PBO> pbo_container;
+
     PBO p_pbo;
+    Tex_obj srcTex;
+    Tex_obj destTex;
     SSBO ssbo_weights;
 
 
-    float m_NUM_PIX;
-    unsigned int m_WORK_GROUP_SIZE;
+    unsigned int m_num_pix;
+    unsigned int m_work_group_size;
     glm::ivec2 m_res;
 };
 
