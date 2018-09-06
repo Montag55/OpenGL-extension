@@ -11,9 +11,7 @@ int main(int argc, char* argv[]) {
 
   GLApplication app;
   std::vector<float> first_render = app.render(pictures, weights);
-  //std::vector<float> a1_render = app.render(pictures);
-  //app.cleanup();
-
+  app.cleanupSSBOs();
 
   return 0;
 }

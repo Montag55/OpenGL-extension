@@ -42,14 +42,12 @@ class GLApplication{
     void do_Computation(GLuint program);
     void update_StorageBuffer(Pstruct pstruct);
     void update_StorageBuffer(std::vector<float> input_buffer);
-    void update_Texture();
-    void update_PixelBuffer(PBO pbo, std::vector<float> input_buffer);
+    void update_Texture(std::vector<float> input_buffer);
 
     void initialCheck();
     void initializePrograms();
     void initializeStorageBuffers();
     void initializeTextures();
-    void initPixelBuffer();
     void initializeFramBuffer();
 
     glm::vec3   g_background_color;
@@ -66,9 +64,7 @@ class GLApplication{
     std::vector<float> result_container;
     std::vector<Tex_obj> tex_container;
     std::vector<const char*> uniform_names;
-    std::vector<PBO> pbo_container;
 
-    PBO p_pbo;
     Tex_obj srcTex;
     Tex_obj destTex;
     SSBO ssbo_weights;
@@ -77,6 +73,7 @@ class GLApplication{
     unsigned int m_num_pix;
     unsigned int m_work_group_size;
     glm::ivec2 m_res;
+    glm::ivec2 m_texAtlas_dim;
 };
 
 #endif
