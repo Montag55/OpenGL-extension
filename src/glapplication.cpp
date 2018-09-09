@@ -9,10 +9,10 @@ GLApplication::GLApplication() {
   g_weighted_sum_program = 0;
   g_tex_program = 0;
   m_work_group_size = 10;
-  m_layerCount = 20;
+  m_layerCount = 30;
   m_num_pix = 1920*1080*3;
   m_res = glm::ivec2(1920*3, 1080);
-  m_texAtlas_dim = glm::ivec2(2,10);
+  m_texAtlas_dim = glm::ivec2(2,15);
 
   initialCheck();
   initializePrograms();
@@ -208,9 +208,13 @@ void GLApplication::update_Texture(std::vector<float> input_buffer) {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, srcTex.handle);
 
-  for(unsigned int y = 0; y < m_texAtlas_dim.y; y++){
-    for(unsigned int x = 0; x < m_texAtlas_dim.x; x++){
-      glTexSubImage2D(GL_TEXTURE_2D, 0, (x * m_res.x), (y * m_res.y), m_res.x, m_res.y, GL_RED, GL_FLOAT, input_buffer.data());
+  #pragma omp parallel
+  {
+    #pragma omp parallel for collapse(2)
+    for(unsigned int y = 0; y < m_texAtlas_dim.y; y++){
+      for(unsigned int x = 0; x < m_texAtlas_dim.x; x++){
+        glTexSubImage2D(GL_TEXTURE_2D, 0, (x * m_res.x), (y * m_res.y), m_res.x, m_res.y, GL_RED, GL_FLOAT, input_buffer.data());
+      }
     }
   }
 

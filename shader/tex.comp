@@ -12,7 +12,7 @@ void main(){
   vec4 orig = imageLoad(destTex, idx);
   vec4 tmp = vec4(0, 0, 0, 0);
 
-  for(int y = 0; y < 10; y++){
+  for(int y = 0; y < 15; y++){
     for(int x = 0; x < 2; x++){
       tmp += imageLoad(srcTex, ivec2((idx.x + x*1920), (idx.y + y*1080))) * (weights[x + x*y]);
     }

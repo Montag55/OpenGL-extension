@@ -15,6 +15,7 @@
 #include <streambuf>
 #include "structs.hpp"
 #include "window.hpp"
+#include <omp.h>
 
 ///GLM INCLUDES
 #define GLM_FORCE_RADIANS

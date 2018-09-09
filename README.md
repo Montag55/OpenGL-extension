@@ -1,5 +1,5 @@
 ### Compile:
-g++ main.cpp window.cpp glapplication.cpp -o test -lglut -lGL -lGLU -lGLEW -lglfw -std=c++11
+g++ main.cpp window.cpp glapplication.cpp -o test -lglut -lGL -lGLU -lGLEW -lglfw -fopenmp -std=c++11
 
 
 ### Dependencies:
