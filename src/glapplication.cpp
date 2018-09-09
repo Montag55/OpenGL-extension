@@ -21,10 +21,25 @@ GLApplication::GLApplication() {
 }
 
 std::vector<float> GLApplication::render(std::vector<std::vector<float>*> pictures, std::vector<float> weights) {
-  pictures.resize(m_layerCount);
-  weights.resize(m_layerCount, 0);
-  for(unsigned int i = 0; i < m_layerCount; i++){
-    pictures[i]->resize(m_num_pix, 0);
+
+  if(pictures.size() != m_layerCount){
+    std::cout << "WARNING! Your amount of pictures are: \t" << pictures.size() << std::endl;
+    std::cout << "Efficient would be: \t\t\t" << m_layerCount << std::endl;
+    std::cout << "Filling up with: \t\t\tZero-Vector \n" << std::endl;
+
+    std::vector<float>* tmp = new std::vector<float>;
+    pictures.resize(m_layerCount, tmp);
+    for(unsigned int i = 0; i < m_layerCount; i++){
+      pictures[i]->resize(m_num_pix, 0);
+    }
+  }
+
+  if(weights.size() != m_layerCount){
+    std::cout << "WARNING! Your amount of weights are: \t" << weights.size() << std::endl;
+    std::cout << "Efficient would be: \t\t\t" << m_layerCount << std::endl;
+    std::cout << "Filling up with: \t\t\t1.0f \n" << std::endl;
+
+    weights.resize(m_layerCount, 1.0f);
   }
 
   while (!g_win.shouldClose()) {
