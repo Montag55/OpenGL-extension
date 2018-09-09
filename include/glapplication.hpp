@@ -29,7 +29,7 @@ class GLApplication{
     GLApplication();
     ~GLApplication();
     std::vector<float> render(std::vector<std::vector<float>*> pictures, std::vector<float> weights);
-    void cleanupSSBOs();
+    void cleanup();
 
 
   protected:
@@ -38,12 +38,11 @@ class GLApplication{
     GLuint loadShader(GLenum type, std::string const& s);
     GLuint createProgram(std::string const& comp);
 
-    void read_Computation();
     void read_Texture();
     void do_Computation(GLuint program);
     void update_StorageBuffer(Pstruct pstruct);
     void update_StorageBuffer(std::vector<float> input_buffer);
-    void update_Texture(std::vector<float> input_buffer);
+    void update_Texture(std::vector<std::vector<float>*> input_buffer);
 
     void initialCheck();
     void initializePrograms();
